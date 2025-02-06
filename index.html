@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Personal Library Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <h1>My Library</h1>
+        
+        <form id="searchForm">
+            <input type="text" id="searchInput" placeholder="Search for books...">
+            <button type="submit">Search</button>
+        </form>
+
+        <div id="searchResults"></div>
+        
+        <h2>My Bookshelf</h2>
+        <div id="bookshelf"></div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        const library = new LibraryManager();
+        const ui = new UIManager(library);
+        
+        window.app = {
+            addBookToLibrary: (book) => {
+                library.addBook(book);
+                ui.renderLibrary();
+            }
+        };
+    </script>
+</body>
+</html>
