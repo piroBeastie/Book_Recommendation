@@ -39,19 +39,26 @@ class LibraryManager {
     }
 
     addBook(book) {
-        const newBook = {
-            id: Date.now(),
-            title: book.title,
-            author: book.author,
-            genre: book.genre,
-            progress: 0,
-            status: 'unread',
-            googleId: book.googleId,
-            coverUrl: book.coverUrl
-        };
-        this.books.push(newBook);
-        this.saveToLocalStorage();
-        return newBook;
+        const isDuplicate = this.books.some(existingBook => 
+            existingBook.googleId === book.googleId
+        );
+
+        if (!isDuplicate) {
+            const newBook = {
+                id: Date.now(),
+                title: book.title,
+                author: book.author,
+                genre: book.genre,
+                progress: 0,
+                status: 'unread',
+                googleId: book.googleId,
+                coverUrl: book.coverUrl
+            };
+            this.books.push(newBook);
+            this.saveToLocalStorage();
+            return newBook;
+        }
+        return null;
     }
 
     saveToLocalStorage() {
@@ -147,17 +154,17 @@ class UIManager {
     }
 
     renderLibrary(books = null) {
-        const bookshelf = document.getElementById('bookshelf');
-        if (!bookshelf) return;
+        const sidebarBookshelf = document.getElementById('sidebarBookshelf');
+        if (!sidebarBookshelf) return;
 
         const booksToRender = books || this.library.books;
 
         if (booksToRender.length === 0) {
-            bookshelf.innerHTML = '<p>No books in your library.</p>';
+            sidebarBookshelf.innerHTML = '<p>No books in your library.</p>';
             return;
         }
 
-        bookshelf.innerHTML = booksToRender.map(book => `
+        sidebarBookshelf.innerHTML = booksToRender.map(book => `
             <div class="book-card ${book.status}">
                 <img src="${book.coverUrl}" alt="${book.title}" class="book-cover">
                 <div class="book-info">
@@ -171,7 +178,7 @@ class UIManager {
                                value="${book.progress}" 
                                min="0" 
                                max="100"
-                               onchange="app.updateProgress(${book.id}, this.value)">
+                               onchange="window.app.updateProgress(${book.id}, this.value)">
                         <span>${book.progress}%</span>
                     </div>
                 </div>
@@ -180,21 +187,35 @@ class UIManager {
     }
 }
 
-const library = new LibraryManager();
-const ui = new UIManager(library);
+function toggleBookshelf() {
+    const sidebar = document.getElementById('bookshelfSidebar');
+    sidebar.classList.toggle('open');
+}
 
-window.app = {
-    addBookToLibrary: (book) => {
-        library.addBook(book);
-        ui.renderLibrary();
-    },
-    updateProgress: (bookId, progress) => {
-        const book = library.books.find(b => b.id === bookId);
-        if (book) {
-            book.progress = parseInt(progress);
-            book.status = progress == 100 ? 'completed' : 'reading';
-            library.saveToLocalStorage();
-            ui.renderLibrary();
+document.addEventListener('DOMContentLoaded', () => {
+    const library = new LibraryManager();
+    const ui = new UIManager(library);
+
+    window.app = {
+        addBookToLibrary: (book) => {
+            const addedBook = library.addBook(book);
+            if (addedBook) {
+                ui.renderLibrary();
+            } else {
+                alert('This book is already in your library!');
+            }
+        },
+        updateProgress: (bookId, progress) => {
+            const book = library.books.find(b => b.id === bookId);
+            if (book) {
+                book.progress = parseInt(progress);
+                book.status = progress == 100 ? 'completed' : 'reading';
+                library.saveToLocalStorage();
+                ui.renderLibrary();
+            }
         }
-    }
-};
+    };
+
+    // Initial library render
+    ui.renderLibrary();
+});

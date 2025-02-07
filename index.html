@@ -3,24 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Library Manager</title>
+    <title>Modern Library Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <button class="bookshelf-toggle" onclick="toggleBookshelf()">My Bookshelf</button>
+    
     <div class="container">
-        <h1>My Library Manager</h1>
+        <h1>Library Manager</h1>
 
         <section class="search-section">
-            <h2>Search Books</h2>
+            <h2>Anything You Like</h2>
             <form id="searchForm">
                 <div class="search-controls">
                     <div class="search-group">
-                        <label for="searchInput">Search Books:</label>
+                        <label for="searchInput">Search Book</label>
                         <input type="text" id="searchInput" placeholder="Enter book title, author, or keyword...">
                     </div>
                     
                     <div class="genre-group">
-                        <label for="searchGenre">Select Genre:</label>
+                        <label for="searchGenre">Genre</label>
                         <select id="searchGenre">
                             <option value="">All Genres</option>
                             <option value="Fiction">Fiction</option>
@@ -42,43 +45,20 @@
                         </select>
                     </div>
                     
-                    <button type="submit">Search</button>
+                    <button id="search" type="submit">Search</button>
                 </div>
             </form>
             
             <div id="searchResults" class="results-grid"></div>
         </section>
-
-        <section class="library-section">
-            <div class="section-header">
-                <h2>My Bookshelf</h2>
-                <div class="genre-group">
-                    <label for="libraryGenre">Filter by Genre:</label>
-                    <select id="libraryGenre">
-                        <option value="">All Genres</option>
-                        <option value="Fiction">Fiction</option>
-                        <option value="Science Fiction">Science Fiction</option>
-                        <option value="Fantasy">Fantasy</option>
-                        <option value="Mystery">Mystery</option>
-                        <option value="Romance">Romance</option>
-                        <option value="Thriller">Thriller</option>
-                        <option value="Horror">Horror</option>
-                        <option value="Biography">Biography</option>
-                        <option value="History">History</option>
-                        <option value="Science">Science</option>
-                        <option value="Technology">Technology</option>
-                        <option value="Self-Help">Self-Help</option>
-                        <option value="Business">Business</option>
-                        <option value="Poetry">Poetry</option>
-                        <option value="Drama">Drama</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div id="bookshelf" class="results-grid"></div>
-        </section>
     </div>
+
+    <div id="bookshelfSidebar">
+        <button class="close-sidebar" onclick="toggleBookshelf()">&times;</button>
+        <h2>My Bookshelf</h2>
+        <div id="sidebarBookshelf" class="results-grid"></div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
