@@ -1,6 +1,11 @@
 class LibraryManager {
     constructor() {
-        this.books = JSON.parse(localStorage.getItem('library')) || [];
+        let storedLibrary = localStorage.getItem('library');
+        if (storedLibrary) {
+            this.books = JSON.parse(storedLibrary);
+        } else {
+            this.books = [];
+        }
         this.googleBooksAPI = 'https://www.googleapis.com/books/v1/volumes';
     }
 
@@ -23,18 +28,48 @@ class LibraryManager {
                 return [];
             }
 
-            return data.items.map(item => ({
-                googleId: item.id,
-                title: item.volumeInfo.title || 'Untitled',
-                author: item.volumeInfo.authors ? item.volumeInfo.authors[0] : 'Unknown Author',
-                genre: item.volumeInfo.categories ? item.volumeInfo.categories[0] : genre || 'Uncategorized',
-                coverUrl: item.volumeInfo.imageLinks ? 
-                    item.volumeInfo.imageLinks.thumbnail : 
-                    'https://via.placeholder.com/128x192?text=No+Cover'
-            }));
+            return data.items.map(item => {
+                let title = 'Untitled';
+                if (item.volumeInfo.title) {
+                    title = item.volumeInfo.title;
+                }
+
+                let author = 'Unknown Author';
+                if (item.volumeInfo.authors) {
+                    author = item.volumeInfo.authors[0];
+                }
+
+                let bookGenre = 'Uncategorized';
+                if (item.volumeInfo.categories) {
+                    bookGenre = item.volumeInfo.categories[0];
+                } else if (genre) {
+                    bookGenre = genre;
+                }
+
+                let coverUrl = 'https://via.placeholder.com/128x192?text=No+Cover';
+                if (item.volumeInfo.imageLinks) {
+                    coverUrl = item.volumeInfo.imageLinks.thumbnail;
+                }
+
+                return {
+                    googleId: item.id,
+                    title: title,
+                    author: author,
+                    genre: bookGenre,
+                    coverUrl: coverUrl
+                };
+            });
         } catch (error) {
             console.error('Error searching books:', error);
             return [];
+        }
+    }
+
+    getBooksByGenre(genre) {
+        if (genre) {
+            return this.books.filter(book => book.genre === genre);
+        } else {
+            return this.books;
         }
     }
 
@@ -64,15 +99,8 @@ class LibraryManager {
     saveToLocalStorage() {
         localStorage.setItem('library', JSON.stringify(this.books));
     }
-
-    getBooksByGenre(genre) {
-        return genre ? 
-            this.books.filter(book => book.genre === genre) : 
-            this.books;
-    }
 }
 
-// Then add the UIManager class
 class UIManager {
     constructor(libraryManager) {
         this.library = libraryManager;
@@ -104,7 +132,10 @@ class UIManager {
         if (!searchInput || !searchResults) return;
 
         const query = searchInput.value.trim();
-        const selectedGenre = genreSelect ? genreSelect.value : '';
+        let selectedGenre = '';
+        if (genreSelect) {
+            selectedGenre = genreSelect.value;
+        }
 
         if (!query) {
             searchResults.innerHTML = '<p>Please enter a search term</p>';
@@ -148,7 +179,10 @@ class UIManager {
 
     filterLibrary() {
         const genreSelect = document.getElementById('libraryGenre');
-        const selectedGenre = genreSelect ? genreSelect.value : '';
+        let selectedGenre = '';
+        if (genreSelect) {
+            selectedGenre = genreSelect.value;
+        }
         const filteredBooks = this.library.getBooksByGenre(selectedGenre);
         this.renderLibrary(filteredBooks);
     }
@@ -157,7 +191,12 @@ class UIManager {
         const sidebarBookshelf = document.getElementById('sidebarBookshelf');
         if (!sidebarBookshelf) return;
 
-        const booksToRender = books || this.library.books;
+        let booksToRender;
+        if (books) {
+            booksToRender = books;
+        } else {
+            booksToRender = this.library.books;
+        }
 
         if (booksToRender.length === 0) {
             sidebarBookshelf.innerHTML = '<p>No books in your library.</p>';
@@ -209,13 +248,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const book = library.books.find(b => b.id === bookId);
             if (book) {
                 book.progress = parseInt(progress);
-                book.status = progress == 100 ? 'completed' : 'reading';
+                if (progress == 100) {
+                    book.status = 'completed';
+                } else {
+                    book.status = 'reading';
+                }
                 library.saveToLocalStorage();
                 ui.renderLibrary();
             }
         }
     };
 
-    // Initial library render
     ui.renderLibrary();
 });
