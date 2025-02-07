@@ -169,9 +169,11 @@ class UIManager {
                     <h3>${book.title}</h3>
                     <p>By ${book.author}</p>
                     <p>Genre: ${book.genre}</p>
+                    <div class="newBtn">
                     <button onclick="app.addBookToLibrary(${JSON.stringify(book).replace(/"/g, '&quot;')})">
                         Add to Library
                     </button>
+                    </div>
                 </div>
             </div>
         `).join('');
