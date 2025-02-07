@@ -4,7 +4,40 @@ class LibraryManager {
         this.googleBooksAPI = 'https://www.googleapis.com/books/v1/volumes';
     }
 
-    // Add a book to the library
+    async searchBooks(query, genre = '') {
+        try {
+            let searchQuery = query;
+            if (genre) {
+                searchQuery += `+subject:${genre}`;
+            }
+            
+            const response = await fetch(
+                `${this.googleBooksAPI}?q=${encodeURIComponent(searchQuery)}&maxResults=20`
+            );
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            
+            if (!data.items) {
+                return [];
+            }
+
+            return data.items.map(item => ({
+                googleId: item.id,
+                title: item.volumeInfo.title || 'Untitled',
+                author: item.volumeInfo.authors ? item.volumeInfo.authors[0] : 'Unknown Author',
+                genre: item.volumeInfo.categories ? item.volumeInfo.categories[0] : genre || 'Uncategorized',
+                coverUrl: item.volumeInfo.imageLinks ? 
+                    item.volumeInfo.imageLinks.thumbnail : 
+                    'https://via.placeholder.com/128x192?text=No+Cover'
+            }));
+        } catch (error) {
+            console.error('Error searching books:', error);
+            return [];
+        }
+    }
+
     addBook(book) {
         const newBook = {
             id: Date.now(),
@@ -21,109 +54,147 @@ class LibraryManager {
         return newBook;
     }
 
-    // Update reading progress
-    updateProgress(bookId, progress) {
-        const book = this.books.find(b => b.id === bookId);
-        if (book) {
-            book.progress = Math.min(100, Math.max(0, progress));
-            book.status = progress === 100 ? 'completed' : 'reading';
-            this.saveToLocalStorage();
-        }
-    }
-
-    // Save to localStorage
     saveToLocalStorage() {
         localStorage.setItem('library', JSON.stringify(this.books));
     }
 
-    async searchBooks(query) {
-        try {
-            const response = await fetch(
-                `${this.googleBooksAPI}?q=${encodeURIComponent(query)}&maxResults=10`
-            );
-            const data = await response.json();
-            return data.items.map(item => ({
-                googleId: item.id,
-                title: item.volumeInfo.title,
-                author: item.volumeInfo.authors?.[0] || 'Unknown',
-                genre: item.volumeInfo.categories?.[0] || 'Uncategorized',
-                coverUrl: item.volumeInfo.imageLinks?.thumbnail || 'placeholder.jpg'
-            }));
-        } catch (error) {
-            console.error('Error searching books:', error);
-            return [];
-        }
-    }
-
-    // Get book recommendations based on genre
-    getRecommendations(genre) {
-        return this.books
-            .filter(book => book.genre === genre && book.status === 'completed')
-            .sort((a, b) => b.progress - a.progress);
+    getBooksByGenre(genre) {
+        return genre ? 
+            this.books.filter(book => book.genre === genre) : 
+            this.books;
     }
 }
 
-// UI Manager Class
+// Then add the UIManager class
 class UIManager {
     constructor(libraryManager) {
         this.library = libraryManager;
-        this.initializeUI();
+        this.initializeEventListeners();
     }
 
-    initializeUI() {
+    initializeEventListeners() {
         const searchForm = document.getElementById('searchForm');
-        searchForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const query = document.getElementById('searchInput').value;
-            const results = await this.library.searchBooks(query);
+        if (searchForm) {
+            searchForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.handleSearch();
+            });
+        }
+
+        const libraryGenreSelect = document.getElementById('libraryGenre');
+        if (libraryGenreSelect) {
+            libraryGenreSelect.addEventListener('change', () => {
+                this.filterLibrary();
+            });
+        }
+    }
+
+    async handleSearch() {
+        const searchInput = document.getElementById('searchInput');
+        const genreSelect = document.getElementById('searchGenre');
+        const searchResults = document.getElementById('searchResults');
+
+        if (!searchInput || !searchResults) return;
+
+        const query = searchInput.value.trim();
+        const selectedGenre = genreSelect ? genreSelect.value : '';
+
+        if (!query) {
+            searchResults.innerHTML = '<p>Please enter a search term</p>';
+            return;
+        }
+
+        searchResults.innerHTML = '<p>Searching...</p>';
+
+        try {
+            const results = await this.library.searchBooks(query, selectedGenre);
             this.displaySearchResults(results);
-        });
-
-        document.getElementById('bookshelf').addEventListener('change', (e) => {
-            if (e.target.classList.contains('progress-input')) {
-                const bookId = parseInt(e.target.dataset.bookId);
-                const progress = parseInt(e.target.value);
-                this.library.updateProgress(bookId, progress);
-                this.renderLibrary();
-            }
-        });
-
-        this.renderLibrary();
+        } catch (error) {
+            searchResults.innerHTML = '<p>Error searching books. Please try again.</p>';
+            console.error('Search error:', error);
+        }
     }
 
     displaySearchResults(books) {
         const resultsContainer = document.getElementById('searchResults');
+        if (!resultsContainer) return;
+
+        if (books.length === 0) {
+            resultsContainer.innerHTML = '<p>No books found matching your criteria.</p>';
+            return;
+        }
+
         resultsContainer.innerHTML = books.map(book => `
             <div class="book-card">
                 <img src="${book.coverUrl}" alt="${book.title}" class="book-cover">
-                <h3>${book.title}</h3>
-                <p>By ${book.author}</p>
-                <p>Genre: ${book.genre}</p>
-                <button onclick="app.addBookToLibrary(${JSON.stringify(book).replace(/"/g, '&quot;')})">
-                    Add to Library
-                </button>
+                <div class="book-info">
+                    <h3>${book.title}</h3>
+                    <p>By ${book.author}</p>
+                    <p>Genre: ${book.genre}</p>
+                    <button onclick="app.addBookToLibrary(${JSON.stringify(book).replace(/"/g, '&quot;')})">
+                        Add to Library
+                    </button>
+                </div>
             </div>
         `).join('');
     }
 
-    renderLibrary() {
+    filterLibrary() {
+        const genreSelect = document.getElementById('libraryGenre');
+        const selectedGenre = genreSelect ? genreSelect.value : '';
+        const filteredBooks = this.library.getBooksByGenre(selectedGenre);
+        this.renderLibrary(filteredBooks);
+    }
+
+    renderLibrary(books = null) {
         const bookshelf = document.getElementById('bookshelf');
-        bookshelf.innerHTML = this.library.books.map(book => `
+        if (!bookshelf) return;
+
+        const booksToRender = books || this.library.books;
+
+        if (booksToRender.length === 0) {
+            bookshelf.innerHTML = '<p>No books in your library.</p>';
+            return;
+        }
+
+        bookshelf.innerHTML = booksToRender.map(book => `
             <div class="book-card ${book.status}">
                 <img src="${book.coverUrl}" alt="${book.title}" class="book-cover">
-                <h3>${book.title}</h3>
-                <p>By ${book.author}</p>
-                <p>Genre: ${book.genre}</p>
-                <div class="progress-container">
-                    <input type="range" 
-                           class="progress-input" 
-                           data-book-id="${book.id}"
-                           value="${book.progress}" 
-                           min="0" 
-                           max="100">
-                    <span>${book.progress}%</span>
+                <div class="book-info">
+                    <h3>${book.title}</h3>
+                    <p>By ${book.author}</p>
+                    <p>Genre: ${book.genre}</p>
+                    <div class="progress-container">
+                        <label>Reading Progress:</label>
+                        <input type="range" 
+                               class="progress-bar" 
+                               value="${book.progress}" 
+                               min="0" 
+                               max="100"
+                               onchange="app.updateProgress(${book.id}, this.value)">
+                        <span>${book.progress}%</span>
+                    </div>
                 </div>
             </div>
         `).join('');
     }
 }
+
+const library = new LibraryManager();
+const ui = new UIManager(library);
+
+window.app = {
+    addBookToLibrary: (book) => {
+        library.addBook(book);
+        ui.renderLibrary();
+    },
+    updateProgress: (bookId, progress) => {
+        const book = library.books.find(b => b.id === bookId);
+        if (book) {
+            book.progress = parseInt(progress);
+            book.status = progress == 100 ? 'completed' : 'reading';
+            library.saveToLocalStorage();
+            ui.renderLibrary();
+        }
+    }
+};
