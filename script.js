@@ -65,12 +65,18 @@ class LibraryManager {
         }
     }
 
-    getBooksByGenre(genre) {
-        if (genre) {
-            return this.books.filter(book => book.genre === genre);
-        } else {
-            return this.books;
+    getBooksByGenre(genre, showOnlyLiked = false) {
+        let filteredBooks = this.books;
+        
+        if (showOnlyLiked) {
+            filteredBooks = filteredBooks.filter(book => book.isLiked);
         }
+        
+        if (genre) {
+            filteredBooks = filteredBooks.filter(book => book.genre === genre);
+        }
+        
+        return filteredBooks;
     }
 
     addBook(book) {
@@ -84,8 +90,7 @@ class LibraryManager {
                 title: book.title,
                 author: book.author,
                 genre: book.genre,
-                progress: 0,
-                status: 'unread',
+                isLiked: false,
                 googleId: book.googleId,
                 coverUrl: book.coverUrl
             };
@@ -96,6 +101,16 @@ class LibraryManager {
         return null;
     }
 
+    toggleLike(bookId) {
+        const book = this.books.find(b => b.id === bookId);
+        if (book) {
+            book.isLiked = !book.isLiked;
+            this.saveToLocalStorage();
+            return book.isLiked;
+        }
+        return false;
+    }
+
     saveToLocalStorage() {
         localStorage.setItem('library', JSON.stringify(this.books));
     }
@@ -104,6 +119,7 @@ class LibraryManager {
 class UIManager {
     constructor(libraryManager) {
         this.library = libraryManager;
+        this.showOnlyLiked = false;
         this.initializeEventListeners();
     }
 
@@ -119,6 +135,14 @@ class UIManager {
         const libraryGenreSelect = document.getElementById('libraryGenre');
         if (libraryGenreSelect) {
             libraryGenreSelect.addEventListener('change', () => {
+                this.filterLibrary();
+            });
+        }
+
+        const showLikedOnly = document.getElementById('showLikedOnly');
+        if (showLikedOnly) {
+            showLikedOnly.addEventListener('change', () => {
+                this.showOnlyLiked = showLikedOnly.checked;
                 this.filterLibrary();
             });
         }
@@ -166,14 +190,20 @@ class UIManager {
             <div class="book-card">
                 <img src="${book.coverUrl}" alt="${book.title}" class="book-cover">
                 <div class="book-info">
+                <div class="book-card-low">
+                <div>
                     <h3>${book.title}</h3>
                     <p>By ${book.author}</p>
                     <p>Genre: ${book.genre}</p>
+                </div>
+                <div>
                     <div class="newBtn">
                     <button onclick="app.addBookToLibrary(${JSON.stringify(book).replace(/"/g, '&quot;')})">
                         Add to Library
                     </button>
                     </div>
+                </div>
+                </div>
                 </div>
             </div>
         `).join('');
@@ -185,7 +215,7 @@ class UIManager {
         if (genreSelect) {
             selectedGenre = genreSelect.value;
         }
-        const filteredBooks = this.library.getBooksByGenre(selectedGenre);
+        const filteredBooks = this.library.getBooksByGenre(selectedGenre, this.showOnlyLiked);
         this.renderLibrary(filteredBooks);
     }
 
@@ -206,22 +236,17 @@ class UIManager {
         }
 
         sidebarBookshelf.innerHTML = booksToRender.map(book => `
-            <div class="book-card ${book.status}">
+            <div class="book-card">
                 <img src="${book.coverUrl}" alt="${book.title}" class="book-cover">
                 <div class="book-info">
                     <h3>${book.title}</h3>
                     <p>By ${book.author}</p>
                     <p>Genre: ${book.genre}</p>
-                    <div class="progress-container">
-                        <label>Reading Progress:</label>
-                        <input type="range" 
-                               class="progress-bar" 
-                               value="${book.progress}" 
-                               min="0" 
-                               max="100"
-                               onchange="window.app.updateProgress(${book.id}, this.value)">
-                        <span>${book.progress}%</span>
-                    </div>
+                    <button 
+                        class="like-button ${book.isLiked ? 'liked' : ''}"
+                        onclick="app.toggleLike(${book.id})">
+                        ${book.isLiked ? '❤️ Liked' : '🤍 Like'}
+                    </button>
                 </div>
             </div>
         `).join('');
@@ -246,18 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('This book is already in your library!');
             }
         },
-        updateProgress: (bookId, progress) => {
-            const book = library.books.find(b => b.id === bookId);
-            if (book) {
-                book.progress = parseInt(progress);
-                if (progress == 100) {
-                    book.status = 'completed';
-                } else {
-                    book.status = 'reading';
-                }
-                library.saveToLocalStorage();
-                ui.renderLibrary();
-            }
+        toggleLike: (bookId) => {
+            library.toggleLike(bookId);
+            ui.filterLibrary();
         }
     };
 

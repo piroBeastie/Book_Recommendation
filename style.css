@@ -125,6 +125,16 @@ button:hover {
     box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
 }
 
+.book-card-low{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#add{
+    width: 120px;
+}
+
 .book-cover {
     width: 100%;
     height: 300px;
@@ -212,4 +222,47 @@ button:hover {
     color: white;
     padding: 10px;
     border-radius: 8px;
+}
+.like-button {
+    background-color: #606C38;
+    color: #FEFAE0;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    width: 120px;
+    margin-top: 12px;
+}
+
+.like-button:hover {
+    background-color: #283618;
+}
+
+.like-button.liked {
+    background-color: #BC6C25;
+}
+
+.like-button.liked:hover {
+    background-color: #975618;
+}
+
+.filter-controls {
+    margin: 1rem 0;
+    padding: 0 1rem;
+}
+
+.filter-controls label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #283618;
+    font-weight: 500;
+}
+
+.filter-controls input[type="checkbox"] {
+    width: auto;
+    accent-color: #606C38;
 }
