@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+ @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
 
 *{
     box-sizing: border-box;
@@ -110,7 +110,7 @@ button:hover {
 }
 
 .book-card {
-    background: #FEFAE0;
+     background: #FEFAE0;
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
@@ -118,10 +118,11 @@ button:hover {
     display: flex;
     flex-direction: column;
     height: 100%;
+    padding: 16px;
 }
 
 .book-card:hover {
-    transform: translateY(-5px) scale(1.02);
+   transform: translateY(-5px) scale(1.02);
     box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -129,6 +130,7 @@ button:hover {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    gap: 16px;  
 }
 
 #add{
@@ -136,9 +138,10 @@ button:hover {
 }
 
 .book-cover {
-    width: 100%;
+     width: 100%;
     height: 300px;
     object-fit: cover;
+    border-radius: 8px;
 }
 
 .book-info {
@@ -146,7 +149,7 @@ button:hover {
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 150px;
+    gap: 12px;
 }
 
 .book-info h3 {
@@ -157,6 +160,22 @@ button:hover {
 
 .newBtn{
     display: grid;
+}
+
+.newBtn button {
+    width: 100%;
+    background-color: #606C38;
+    color: #FEFAE0;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.newBtn button:hover {
+    background-color: #283618;
 }
 
 .book-info p {
@@ -224,24 +243,25 @@ button:hover {
     border-radius: 8px;
 }
 .like-button {
-    background-color: #606C38;
-    color: #FEFAE0;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
     cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #606C38; 
+    background: #FEFAE0;
+    color: #606C38; 
     font-weight: 500;
     transition: all 0.3s ease;
-    width: 120px;
-    margin-top: 12px;
-}
-
-.like-button:hover {
-    background-color: #283618;
 }
 
 .like-button.liked {
-    background-color: #BC6C25;
+    background: #BC6C25; 
+    color: #FEFAE0; 
+    border-color: #BC6C25;
+}
+
+.like-button:hover {
+    background-color: #606C38;
+    color: #FEFAE0;
 }
 
 .like-button.liked:hover {
@@ -266,3 +286,82 @@ button:hover {
     width: auto;
     accent-color: #606C38;
 }
+
+.book-card.bestseller {
+    border: 2px solid #BC6C25;
+    padding: 16px; 
+}
+
+.bestsellers-section {
+    background: #DDA15E;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.bestsellers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 24px;
+}
+
+.book-card.bestseller {
+    border: 2px solid #BC6C25;
+}
+
+.rank {
+    color: #BC6C25;
+    font-weight: bold;
+}
+
+.weeks {
+    color: #606C38;
+    font-style: italic;
+}
+
+.rating {
+    color: #BC6C25;
+    font-weight: 500;
+    margin-bottom: 8px; 
+}
+
+
+.description-preview {
+    margin: 10px 0;
+    font-size: 0.9rem;
+    color: #4a5568;
+    line-height: 1.4;
+}
+
+.preview-button {
+    display: inline-block;
+    background-color: #283618;
+    color: #FEFAE0;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin: 10px 0;
+    transition: background-color 0.2s;
+}
+
+.preview-button:hover, .buy-button:hover {
+    background-color: #606C38;
+}
+
+.buy-button {
+    display: inline-block;
+    background-color: #283618;
+    color: #FEFAE0;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin: 10px 0;
+    transition: background-color 0.2s;
+}
+
+.published-date, .page-count {
+    font-size: 0.9rem;
+    color: #606C38;
+    margin-bottom: 8px;
+} 
